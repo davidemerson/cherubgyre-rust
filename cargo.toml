@@ -1,7 +1,7 @@
 [package]
 name = "cherubgyre"
 version = "0.1.0"
-edition = "2024"
+edition = "2018"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -10,6 +10,7 @@ lambda_runtime = "0.5"     # AWS Lambda runtime for Rust
 tokio = { version = "1", features = ["full"] }
 aws-config = "0.5"         # AWS Configurations for Rust SDK
 aws-sdk-dynamodb = "0.5"   # DynamoDB SDK for Rust
-aws-lambda-events = "0.5"  # For API Gateway event parsing
+aws_lambda_events = "0.5"  # For API Gateway event parsing
 log = "0.4"
 simple_logger = "1.11"
+lock_api = "0.4.13" # Update this to the latest version
