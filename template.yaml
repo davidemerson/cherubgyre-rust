@@ -1,0 +1,191 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  # DynamoDB Tables
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: users
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  FollowersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: followers
+      AttributeDefinitions:
+        - AttributeName: followee_id
+          AttributeType: S
+        - AttributeName: follower_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: followee_id
+          KeyType: HASH
+        - AttributeName: follower_id
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  DuressStatusTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: duress_status
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  TestModeTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: test_mode
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  FollowedUsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: followed_users
+      AttributeDefinitions:
+        - AttributeName: follower_id
+          AttributeType: S
+        - AttributeName: user_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: follower_id
+          KeyType: HASH
+        - AttributeName: user_id
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  # Lambda Function: Handle API Requests
+  RustApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./target/lambda/
+      Handler: bootstrap
+      Runtime: provided.al2
+      Timeout: 30
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref UsersTable
+          FOLLOWERS_TABLE: !Ref FollowersTable
+          DURESS_STATUS_TABLE: !Ref DuressStatusTable
+          TEST_MODE_TABLE: !Ref TestModeTable
+          FOLLOWED_USERS_TABLE: !Ref FollowedUsersTable
+      Events:
+        InviteCode:
+          Type: Api
+          Properties:
+            Path: /users/invite
+            Method: POST
+            RestApiId: !Ref RustApiGateway
+        RegisterUser:
+          Type: Api
+          Properties:
+            Path: /users/register
+            Method: POST
+            RestApiId: !Ref RustApiGateway
+        GetFollowers:
+          Type: Api
+          Properties:
+            Path: /users/{user_id}/followers
+            Method: GET
+            RestApiId: !Ref RustApiGateway
+        DuressAlert:
+          Type: Api
+          Properties:
+            Path: /users/{user_id}/duress
+            Method: POST
+            RestApiId: !Ref RustApiGateway
+        CancelDuress:
+          Type: Api
+          Properties:
+            Path: /users/{user_id}/duress/cancel
+            Method: POST
+            RestApiId: !Ref RustApiGateway
+        EnableTestMode:
+          Type: Api
+          Properties:
+            Path: /users/{user_id}/test-mode
+            Method: POST
+            RestApiId: !Ref RustApiGateway
+        GetMapData:
+          Type: Api
+          Properties:
+            Path: /users/{user_id}/map
+            Method: GET
+            RestApiId: !Ref RustApiGateway
+
+  # API Gateway
+  RustApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      DefinitionBody:
+        swagger: "2.0"
+        info:
+          title: "Rust API Gateway"
+          version: "1.0"
+        paths:
+          /users/invite:
+            post:
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RustApiFunction.Arn}/invocations
+                httpMethod: POST
+          /users/register:
+            post:
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RustApiFunction.Arn}/invocations
+                httpMethod: POST
+          /users/{user_id}/followers:
+            get:
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RustApiFunction.Arn}/invocations
+                httpMethod: GET
+          /users/{user_id}/duress:
+            post:
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RustApiFunction.Arn}/invocations
+                httpMethod: POST
+          /users/{user_id}/duress/cancel:
+            post:
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RustApiFunction.Arn}/invocations
+                httpMethod: POST
+          /users/{user_id}/test-mode:
+            post:
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RustApiFunction.Arn}/invocations
+                httpMethod: POST
+          /users/{user_id}/map:
+            get:
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RustApiFunction.Arn}/invocations
+                httpMethod: GET
