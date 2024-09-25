@@ -13,4 +13,4 @@ aws-sdk-dynamodb = "0.5"   # DynamoDB SDK for Rust
 aws_lambda_events = "0.5"  # For API Gateway event parsing
 log = "0.4"
 simple_logger = "1.11"
-lock_api = "0.4.12"
+lock_api = "0.4.12" # set static
