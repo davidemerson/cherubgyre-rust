@@ -70,6 +70,9 @@ curl -X POST https://<api-gateway-url>/users/register \
 ```
 ### trigger duress alert
 ```
+curl -X POST https://<api-gateway-url>/users/{user_id}/duress \
+  -H "Content-Type: application/json" \
+  -d '{ "duress_type": "pin_code", "message": "Help!", "timestamp": "2024-09-25T12:00:00Z" }'
 ```
 ### get followers
 ```
