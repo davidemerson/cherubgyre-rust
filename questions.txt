@@ -1,0 +1,2 @@
+Q1. There is no login api documented in the given documentation ? Do i need to implement that. Currently I am passing user-id in the param to access user specific data.
+Q2. In swagger documentation, the register api has invite code and pins, but there's nothing about name etc. Is it fully anonymous
