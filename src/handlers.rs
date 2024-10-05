@@ -69,7 +69,7 @@ pub async fn create_invite(req: web::Json<InviteRequest>) -> HttpResponse {
                 code: invite_code.clone(),
                 invitor_id: user_id,
                 count: 0,
-                created_at: Utc::now(),
+                created_at: Utc::now(),     
             };
 
             match db::save_invite(&invite).await {

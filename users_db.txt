@@ -1,3 +1,1 @@
-{"id":"ddfcc213-ecc7-423f-a43b-9d1c40e704ba","invite_code":"sample_code","normal_pin":"1234","duress_pin":"4321"}
-{"id":"c82560a8-6472-4ac3-bda5-3f59442c2560","invite_code":"sample_code","normal_pin":"1234","duress_pin":"4321"}
 {"id":"795cc7b7-a21e-46fd-8f79-ca1a5b4b5c56","invite_code":"a5df1f00-e8cd-451e-80b8-b5ab6f7f8c75","normal_pin":"1234","duress_pin":"4321"}
