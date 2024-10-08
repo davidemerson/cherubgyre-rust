@@ -1,16 +1,8 @@
-// follow_db.rs
-use std::fs::{OpenOptions};
-use std::io::{Write, BufRead, BufReader};
+use aws_sdk_dynamodb::{Client, Error};
+use aws_sdk_dynamodb::model::AttributeValue;
 use serde::{Serialize, Deserialize};
-use tokio::sync::Mutex;
-use lazy_static::lazy_static;
-use std::io::Error;
-
-lazy_static! {
-    static ref FILE_MUTEX: Mutex<()> = Mutex::new(());
-}
-
-static FOLLOW_FILE_PATH: &str = "follows_db.txt";
+use tracing::{info, error};
+use uuid::Uuid;
 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -19,65 +11,59 @@ pub struct Follow {
     pub followed_id: String,
 }
 
+// Adds a new follow relationship to the DynamoDB "Follow" table
+pub async fn add_follow(client: &Client, follower_id: &str, followed_id: &str) -> Result<(), Error> {
+    info!("Adding a follow relationship in DynamoDB");
 
-
-pub async fn add_follow(follower_id: &str, followed_id: &str) -> Result<(), Error> {
-    let _guard = FILE_MUTEX.lock().await;
-    let mut file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(FOLLOW_FILE_PATH)?;
-    let follow = Follow {
-        follower_id: follower_id.to_string(),
-        followed_id: followed_id.to_string(),
-    };
-    let follow_json = serde_json::to_string(&follow)?;
-    writeln!(file, "{}", follow_json)?;
+    client.put_item()
+        .table_name("Follow")
+        .item("id", AttributeValue::S(Uuid::new_v4().to_string()))
+        .item("follower_id", AttributeValue::S(follower_id.to_string()))
+        .item("followed_id", AttributeValue::S(followed_id.to_string()))
+        .send()
+        .await?;
+    
     Ok(())
 }
 
-pub async fn remove_follow(follower_id: &str, followed_id: &str) -> Result<(), Error> {
-    let _guard = FILE_MUTEX.lock().await;
+// Removes a follow relationship from the DynamoDB "Follow" table
+pub async fn remove_follow(client: &Client, follower_id: &str, followed_id: &str) -> Result<(), Error> {
+    info!("Removing a follow relationship in DynamoDB");
 
-    // Read existing follows
-    let mut file = OpenOptions::new().read(true).open(FOLLOW_FILE_PATH)?;
-    let mut follows: Vec<Follow> = Vec::new();
-    let reader = BufReader::new(&file);
-    for line in reader.lines() {
-        if let Ok(follow_json) = line {
-            if let Ok(existing_follow) = serde_json::from_str::<Follow>(&follow_json) {
-                if !(existing_follow.follower_id == follower_id && existing_follow.followed_id == followed_id) {
-                    follows.push(existing_follow);
-                }
-            }
-        }
-    }
-
-    // Overwrite the file with updated follows
-    file = OpenOptions::new().write(true).truncate(true).open(FOLLOW_FILE_PATH)?;
-    for follow in follows.iter() {
-        let follow_json = serde_json::to_string(&follow)?;
-        writeln!(file, "{}", follow_json)?;
-    }
-
+    client.delete_item()
+        .table_name("Follow")
+        .key("follower_id", AttributeValue::S(follower_id.to_string()))
+        .key("followed_id", AttributeValue::S(followed_id.to_string()))
+        .send()
+        .await?;
+    
     Ok(())
 }
 
-pub async fn get_followers(user_id: &str) -> Result<Vec<String>, Error> {
-    let _guard = FILE_MUTEX.lock().await;
-    let file = OpenOptions::new().read(true).open(FOLLOW_FILE_PATH)?;
-    let reader = BufReader::new(file);
-    let mut followers = Vec::new();
+// Retrieves all follows for a given follower_id
+pub async fn get_follows(client: &Client, followed_id: &str) -> Result<Vec<Follow>, Error> {
+    info!("Fetching follows for a given followed_id");
 
-    for line in reader.lines() {
-        if let Ok(follow_json) = line {
-            if let Ok(follow) = serde_json::from_str::<Follow>(&follow_json) {
-                if follow.followed_id == user_id {
-                    followers.push(follow.follower_id);
-                }
-            }
-        }
-    }
+    let result = client.scan()
+        .table_name("Follow")
+        .filter_expression("followed_id = :followed_id")
+        .expression_attribute_values(":followed_id", AttributeValue::S(followed_id.to_string()))
+        .send()
+        .await?;
 
-    Ok(followers)
+    let follows = result.items.unwrap_or_default()
+        .into_iter()
+        .map(|item| Follow {
+            followed_id: item.get("followed_id")
+                .and_then(|v| v.as_s().ok())
+                .map(|s| s.to_string())
+                .unwrap_or_else(String::new),
+            follower_id: item.get("follower`1   _id")
+                .and_then(|v| v.as_s().ok())
+                .map(|s| s.to_string())
+                .unwrap_or_else(String::new),
+        })
+        .collect();
+
+    Ok(follows)
 }
