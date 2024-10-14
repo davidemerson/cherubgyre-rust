@@ -1,11 +1,10 @@
-use serde::{Serialize, Deserialize};
-use chrono::{DateTime, Utc};
-use aws_sdk_dynamodb::{Client, Error};
-use aws_sdk_dynamodb::model::AttributeValue;
-use aws_config::meta::region::RegionProviderChain;
 use aws_config::load_from_env;
+use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_dynamodb::model::AttributeValue;
+use aws_sdk_dynamodb::{Client, Error};
+use chrono::{DateTime, Utc};
+use serde::{Serialize, Deserialize};
 use tracing::{info, error};
-
 
 pub async fn get_dynamodb_client() -> Client {
     // Set up the region provider
@@ -29,12 +28,10 @@ pub struct User {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Invite {
     pub code: String,
-    pub invitor_id: String, // ID of the user who created the invite
-    pub invite_count: u32, // Number of invitees registered using this invite
-    pub created_at: DateTime<Utc>, // Date when invite was created
+    pub invitor_id: String, 		// ID of the user who created the invite
+    pub invite_count: u32, 			// Number of invitees registered using this invite
+    pub created_at: DateTime<Utc>, 	// Date when invite was created
 }
-
-
 
 pub async fn save_user(client: &Client, user: &User) -> Result<(), Error> {
     info!("here i am");
@@ -46,8 +43,7 @@ pub async fn save_user(client: &Client, user: &User) -> Result<(), Error> {
         .item("normal_pin", AttributeValue::S(user.normal_pin.clone()))
         .item("duress_pin", AttributeValue::S(user.duress_pin.clone()))
         .send()
-        .await?;
-    
+        .await?;   
     Ok(())
 }
 
@@ -58,8 +54,14 @@ pub async fn save_invite(client: &Client, invite: &Invite) -> Result<(), Error> 
         .table_name("Invite")
         .item("code", AttributeValue::S(invite.code.clone()))
         .item("invitor_id", AttributeValue::S(invite.invitor_id.clone()))
-        .item("invite_count", AttributeValue::N(invite.invite_count.to_string()))
-        .item("created_at", AttributeValue::S(invite.created_at.to_rfc3339()))
+        .item(
+        	"invite_count", 
+        	AttributeValue::N(invite.invite_count.to_string()),
+        )
+        .item(
+        	"created_at", 
+        	AttributeValue::S(invite.created_at.to_rfc3339()),
+        )
         .send()
         .await?;
 
@@ -67,7 +69,8 @@ pub async fn save_invite(client: &Client, invite: &Invite) -> Result<(), Error> 
 }
 
 pub async fn get_invite(client: &Client, code: &str) -> Result<Option<Invite>, Error> {
-    let result = client.get_item()
+    let result = client
+    	.get_item()
         .table_name("Invite")
         .key("code", AttributeValue::S(code.to_string()))
         .send()
@@ -75,19 +78,23 @@ pub async fn get_invite(client: &Client, code: &str) -> Result<Option<Invite>, E
 
     if let Some(item) = result.item {
         let invite = Invite {
-            code: item.get("code")
+            code: item
+            	.get("code")
                 .and_then(|v| v.as_s().ok())
                 .map(|s| s.to_string())
                 .unwrap_or_else(String::new),
-            invitor_id: item.get("invitor_id")
+            invitor_id: item
+            	.get("invitor_id")
                 .and_then(|v| v.as_s().ok())
                 .map(|s| s.to_string())
                 .unwrap_or_else(String::new),
-            invite_count: item.get("invite_count")
+            invite_count: item
+            	.get("invite_count")
                 .and_then(|v| v.as_n().ok())
                 .and_then(|n| n.parse::<u32>().ok())
                 .unwrap_or(0),
-            created_at: item.get("created_at")
+            created_at: item
+            	.get("created_at")
                 .and_then(|v| v.as_s().ok())
                 .map(|v| DateTime::parse_from_rfc3339(v).unwrap().with_timezone(&Utc))
                 .unwrap_or(Utc::now()),
@@ -136,10 +143,18 @@ pub async fn update_invite(client: &Client, invite: &Invite) -> Result<(), Error
     	.update_item()
         .table_name("Invite")
         .key("code", AttributeValue::S(invite.code.clone()))
-        .update_expression("SET invitor_id = :invitor_id, invite_count = :invite_count, created_at = :created_at")
+        .update_expression(
+        	"SET invitor_id = :invitor_id, invite_count = :invite_count, created_at = :created_at",
+        )
         .expression_attribute_values(":invitor_id", AttributeValue::S(invite.invitor_id.clone()))
-        .expression_attribute_values(":invite_count", AttributeValue::N(invite.invite_count.to_string()))
-        .expression_attribute_values(":created_at", AttributeValue::S(invite.created_at.to_rfc3339()))
+        .expression_attribute_values(
+        	":invite_count", 
+        	AttributeValue::N(invite.invite_count.to_string()),
+        )
+        .expression_attribute_values(
+        	":created_at", 
+        	AttributeValue::S(invite.created_at.to_rfc3339()),
+        )
         .send()
         .await?;
 

@@ -8,8 +8,6 @@ use std::io::Error;
 // duress_db.rs
 use crate::duress_handlers::MapInfo;
 
-
-
 lazy_static! {
     static ref FILE_MUTEX: Mutex<()> = Mutex::new(());
 }
@@ -24,16 +22,21 @@ pub struct UserPreferences {
 }
 
 // Log a duress event
-pub async fn log_duress_event(user_id: &str, duress_type: &str, message: &str, timestamp: &str) -> Result<(), Error> {
-    let _guard = FILE_MUTEX.lock().await;
-    let mut file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(DURESS_FILE_PATH)?;
-    let duress_entry = format!("{}|{}|{}|{}\n", user_id, duress_type, message, timestamp);
-    writeln!(file, "{}", duress_entry)?;
-    Ok(())
-}
+pub async fn log_duress_event(
+	user_id: &str, 
+	duress_type: &str, 
+	message: &str, 
+	timestamp: &str,
+	) -> Result<(), Error> {
+    	let _guard = FILE_MUTEX.lock().await;
+    	let mut file = OpenOptions::new()
+        	.create(true)
+        	.append(true)
+        	.open(DURESS_FILE_PATH)?;
+    	let duress_entry = format!("{}|{}|{}|{}\n", user_id, duress_type, message, timestamp);
+    	writeln!(file, "{}", duress_entry)?;
+    	Ok(())
+	}
 
 // Cancel a duress event
 pub async fn cancel_duress(user_id: &str) -> Result<(), Error> {
