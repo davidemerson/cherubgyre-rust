@@ -38,7 +38,8 @@ pub struct Invite {
 
 pub async fn save_user(client: &Client, user: &User) -> Result<(), Error> {
     info!("here i am");
-    client.put_item()
+    client
+    	.put_item()
         .table_name("User")
         .item("id", AttributeValue::S(user.id.clone()))
         .item("invite_code", AttributeValue::S(user.invite_code.clone()))
@@ -52,7 +53,8 @@ pub async fn save_user(client: &Client, user: &User) -> Result<(), Error> {
 
 pub async fn save_invite(client: &Client, invite: &Invite) -> Result<(), Error> {
     info!("here i am");
-    client.put_item()
+    client
+    	.put_item()
         .table_name("Invite")
         .item("code", AttributeValue::S(invite.code.clone()))
         .item("invitor_id", AttributeValue::S(invite.invitor_id.clone()))
@@ -130,7 +132,8 @@ pub async fn get_user_invites(client: &Client, user_id: &str) -> Result<Vec<Invi
 }
 
 pub async fn update_invite(client: &Client, invite: &Invite) -> Result<(), Error> {
-    client.update_item()
+    client
+    	.update_item()
         .table_name("Invite")
         .key("code", AttributeValue::S(invite.code.clone()))
         .update_expression("SET invitor_id = :invitor_id, invite_count = :invite_count, created_at = :created_at")

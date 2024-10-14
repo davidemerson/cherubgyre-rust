@@ -15,7 +15,8 @@ pub struct Follow {
 pub async fn add_follow(client: &Client, follower_id: &str, followed_id: &str) -> Result<(), Error> {
     info!("Adding a follow relationship in DynamoDB");
 
-    client.put_item()
+    client
+    	.put_item()
         .table_name("Follow")
         .item("id", AttributeValue::S(Uuid::new_v4().to_string()))
         .item("follower_id", AttributeValue::S(follower_id.to_string()))
@@ -30,7 +31,8 @@ pub async fn add_follow(client: &Client, follower_id: &str, followed_id: &str) -
 pub async fn remove_follow(client: &Client, follower_id: &str, followed_id: &str) -> Result<(), Error> {
     info!("Removing a follow relationship in DynamoDB");
 
-    client.delete_item()
+    client
+    	.delete_item()
         .table_name("Follow")
         .key("follower_id", AttributeValue::S(follower_id.to_string()))
         .key("followed_id", AttributeValue::S(followed_id.to_string()))
