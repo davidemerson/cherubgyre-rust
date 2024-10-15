@@ -28,9 +28,9 @@ pub struct User {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Invite {
 	pub code: String,
-	pub invitor_id: String,         // ID of the user who created the invite
-	pub invite_count: u32,          // Number of invitees registered using this invite
-	pub created_at: DateTime<Utc>,  // Date when invite was created
+	pub invitor_id: String,			// ID of the user who created the invite
+	pub invite_count: u32,			// Number of invitees registered using this invite
+	pub created_at: DateTime<Utc>,	// Date when invite was created
 }
 
 pub async fn save_user(client: &Client, user: &User) -> Result<(), Error> {
@@ -55,11 +55,11 @@ pub async fn save_invite(client: &Client, invite: &Invite) -> Result<(), Error> 
 		.item("code", AttributeValue::S(invite.code.clone()))
 		.item("invitor_id", AttributeValue::S(invite.invitor_id.clone()))
 		.item(
-			"invite_count", 
+			"invite_count",
 			AttributeValue::N(invite.invite_count.to_string()),
 		)
 		.item(
-			"created_at", 
+			"created_at",
 			AttributeValue::S(invite.created_at.to_rfc3339()),
 		)
 		.send()
@@ -155,11 +155,11 @@ pub async fn update_invite(client: &Client, invite: &Invite) -> Result<(), Error
 		)
 		.expression_attribute_values(":invitor_id", AttributeValue::S(invite.invitor_id.clone()))
 		.expression_attribute_values(
-			":invite_count", 
+			":invite_count",
 			AttributeValue::N(invite.invite_count.to_string()),
 		)
 		.expression_attribute_values(
-			":created_at", 
+			":created_at",
 			AttributeValue::S(invite.created_at.to_rfc3339()),
 		)
 		.send()
