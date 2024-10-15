@@ -1,6 +1,6 @@
 {
   "dependencies": {
     "zig": "^0.3.0",
-    "minimist": "~0.2.4"
+    "minimist": ">=0.2.4"
   }
 }
