@@ -26,10 +26,10 @@ pub struct MapInfo {
 	pub last_checkin: String,
 }
 
-
-
 // POST /users/{user_id}/duress
-pub async fn trigger_duress(path: web::Path<String>, req: web::Json<DuressRequest>
+pub async fn trigger_duress(
+	path: web::Path<String>,
+	req: web::Json<DuressRequest>,
 ) -> HttpResponse {
 	let user_id = path.into_inner();
 
@@ -41,7 +41,9 @@ pub async fn trigger_duress(path: web::Path<String>, req: web::Json<DuressReques
 }
 
 // POST /users/{user_id}/duress/cancel
-pub async fn cancel_duress(path: web::Path<String>, req: web::Json<CancelDuressRequest>
+pub async fn cancel_duress(
+	path: web::Path<String>,
+	req: web::Json<CancelDuressRequest>,
 ) -> HttpResponse {
 	let user_id = path.into_inner();
 
@@ -89,7 +91,9 @@ pub async fn get_preferences(path: web::Path<String>
 }
 
 // PATCH /users/{user_id}/preferences
-pub async fn update_preferences(path: web::Path<String>, req: web::Json<UserPreferences>
+pub async fn update_preferences(
+	path: web::Path<String>,
+	req: web::Json<UserPreferences>,
 ) -> HttpResponse {
 	let user_id = path.into_inner();
 

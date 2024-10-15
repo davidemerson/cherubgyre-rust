@@ -96,7 +96,7 @@ pub async fn get_user_preferences(user_id: &str) -> Result<UserPreferences, Erro
 // Update user preferences
 pub async fn update_user_preferences(
 	user_id: &str,
-	preferences: UserPreferences
+	preferences: UserPreferences,
 ) -> Result<(), Error> {
 	let _guard = FILE_MUTEX.lock().await;
 
