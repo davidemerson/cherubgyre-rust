@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "zig": "^0.3.0",
-    "minimist": ">=0.2.4",
+    "minimist": ">=1.2.6",
     "minimatch": ">=3.0.5"
   }
 }
