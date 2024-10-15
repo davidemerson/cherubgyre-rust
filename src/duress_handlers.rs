@@ -68,8 +68,7 @@ pub async fn enable_test_mode(path: web::Path<String>) -> HttpResponse {
 }
 
 // GET /users/{user_id}/map
-pub async fn get_map_info(path: web::Path<String>
-) -> HttpResponse {
+pub async fn get_map_info(path: web::Path<String>) -> HttpResponse {
 	let user_id = path.into_inner();
 
 	// Placeholder: Retrieve location and duress status of all followed users
@@ -80,8 +79,7 @@ pub async fn get_map_info(path: web::Path<String>
 }
 
 // GET /users/{user_id}/preferences
-pub async fn get_preferences(path: web::Path<String>
-) -> HttpResponse {
+pub async fn get_preferences(path: web::Path<String>) -> HttpResponse {
 	let user_id = path.into_inner();
 
 	match duress_db::get_user_preferences(&user_id).await {
@@ -102,4 +100,3 @@ pub async fn update_preferences(
 		Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
 	}
 }
-
