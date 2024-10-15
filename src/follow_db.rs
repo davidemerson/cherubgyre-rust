@@ -14,7 +14,7 @@ pub struct Follow {
 pub async fn add_follow(
 	client: &Client,
 	follower_id: &str,
-	followed_id: &str
+	followed_id: &str,
 ) -> Result<(), Error> {
 	info!("Adding a follow relationship in DynamoDB");
 
@@ -26,7 +26,7 @@ pub async fn add_follow(
 		.item("followed_id", AttributeValue::S(followed_id.to_string()))
 		.send()
 		.await?;
-	
+
 	Ok(())
 }
 
@@ -34,7 +34,7 @@ pub async fn add_follow(
 pub async fn remove_follow(
 	client: &Client,
 	follower_id: &str,
-	followed_id: &str
+	followed_id: &str,
 ) -> Result<(), Error> {
 	info!("Removing a follow relationship in DynamoDB");
 
@@ -45,32 +45,34 @@ pub async fn remove_follow(
 		.key("followed_id", AttributeValue::S(followed_id.to_string()))
 		.send()
 		.await?;
-	
+
 	Ok(())
 }
 
 // Retrieves all follows for a given follower_id
-pub async fn get_follows(
-	client: &Client,
-	followed_id: &str
-) -> Result<Vec<Follow>, Error> {
+pub async fn get_follows(client: &Client, followed_id: &str) -> Result<Vec<Follow>, Error> {
 	info!("Fetching follows for a given followed_id");
 
-	let result = client.scan()
+	let result = client
+		.scan()
 		.table_name("Follow")
 		.filter_expression("followed_id = :followed_id")
 		.expression_attribute_values(":followed_id", AttributeValue::S(followed_id.to_string()))
 		.send()
 		.await?;
 
-	let follows = result.items.unwrap_or_default()
+	let follows = result
+		.items
+		.unwrap_or_default()
 		.into_iter()
 		.map(|item| Follow {
-			followed_id: item.get("followed_id")
+			followed_id: item
+				.get("followed_id")
 				.and_then(|v| v.as_s().ok())
 				.map(|s| s.to_string())
 				.unwrap_or_else(String::new),
-			follower_id: item.get("follower`1   _id")
+			follower_id: item
+				.get("follower`1   _id")
 				.and_then(|v| v.as_s().ok())
 				.map(|s| s.to_string())
 				.unwrap_or_else(String::new),
