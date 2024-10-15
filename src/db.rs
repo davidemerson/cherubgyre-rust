@@ -3,8 +3,8 @@ use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::model::AttributeValue;
 use aws_sdk_dynamodb::{Client, Error};
 use chrono::{DateTime, Utc};
-use serde::{Serialize, Deserialize};
-use tracing::{info, error};
+use serde::{Deserialize, Serialize};
+use tracing::{error, info};
 
 pub async fn get_dynamodb_client() -> Client {
     // Set up the region provider
