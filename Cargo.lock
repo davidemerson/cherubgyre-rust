@@ -656,28 +656,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "basic-rust-api"
-version = "0.1.0"
-dependencies = [
- "actix-web",
- "aws-config",
- "aws-sdk-dynamodb",
- "aws-types",
- "aws_lambda_events",
- "chrono",
- "dotenv",
- "fmt",
- "lambda_runtime",
- "lazy_static",
- "serde",
- "serde_json",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "uuid",
-]
-
-[[package]]
 name = "bitflags"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -769,6 +747,28 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "cherubgyre"
+version = "0.1.0"
+dependencies = [
+ "actix-web",
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "aws-types",
+ "aws_lambda_events",
+ "chrono",
+ "dotenv",
+ "fmt",
+ "lambda_runtime",
+ "lazy_static",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
 
 [[package]]
 name = "chrono"
