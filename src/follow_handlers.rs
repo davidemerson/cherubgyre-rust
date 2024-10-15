@@ -14,19 +14,19 @@ pub struct FollowRequest {
 pub async fn follow_user(
 	// Access the DynamoDB client from the app state
 	client: web::Data<Client>,
-	path: web::Path<String>, 
-	req: web::Json<FollowRequest>
+	path: web::Path<String>,
+	req: web::Json<FollowRequest>,
 ) -> HttpResponse {
 	let follower_id = path.into_inner();
 	let followed_id = req.user_id.clone();
 
 	match follow_db::add_follow(&client, &follower_id, &followed_id).await {
 		Ok(_) => HttpResponse::Ok().body("Followed successfully"),
-		
+
 		Err(err) => {
 			error!("Failed to add follower :{:?}", err);
 			return HttpResponse::InternalServerError().body(err.to_string());
-		},
+		}
 	}
 }
 
@@ -34,8 +34,8 @@ pub async fn follow_user(
 pub async fn unfollow_user(
 	// Access the DynamoDB client from the app state
 	client: web::Data<Client>,
-	path: web::Path<String>, 
-	req: web::Json<FollowRequest>
+	path: web::Path<String>,
+	req: web::Json<FollowRequest>,
 ) -> HttpResponse {
 	let follower_id = path.into_inner();
 	let followed_id = req.user_id.clone();
@@ -50,7 +50,7 @@ pub async fn unfollow_user(
 pub async fn get_user_follows(
 	// Access the DynamoDB client from the app state
 	client: web::Data<Client>,
-	path: web::Path<String>
+	path: web::Path<String>,
 ) -> HttpResponse {
 	let follower_id = path.into_inner();
 
@@ -59,7 +59,7 @@ pub async fn get_user_follows(
 		Err(err) => {
 			error!("Failed to add follower :{:?}", err);
 			return HttpResponse::InternalServerError().body(err.to_string());
-		},
+		}
 	}
 }
 
@@ -68,7 +68,7 @@ pub async fn delete_follower(
 	// Access the DynamoDB client from the app state
 	client: web::Data<Client>,
 	path: web::Path<String>, 
-	req: web::Json<FollowRequest>
+	req: web::Json<FollowRequest>,
 ) -> HttpResponse {
 	// This is the user who is followed
 	let followed_id = path.into_inner();
@@ -86,7 +86,7 @@ pub async fn delete_follower(
 pub async fn get_followers(
 	// Access the DynamoDB client from the app state
 	client: web::Data<Client>,
-	path: web::Path<String>
+	path: web::Path<String>,
 ) -> HttpResponse {
 	let followed_id = path.into_inner();
 
@@ -96,6 +96,6 @@ pub async fn get_followers(
 		Err(err) => {
 			error!("Failed to add follower :{:?}", err);
 			return HttpResponse::InternalServerError().body(err.to_string());
-		},
+		}
 	}
 }
