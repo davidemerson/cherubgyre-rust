@@ -28,9 +28,12 @@ pub struct User {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Invite {
 	pub code: String,
-	pub invitor_id: String, //			ID of the user who created the invite
-	pub invite_count: u32, //			Number of invitees registered using this invite
-	pub created_at: DateTime<Utc>, //	Date when invite was created
+	// ID of the user who created the invite
+	pub invitor_id: String,
+	// Number of invitees registered using this invite
+	pub invite_count: u32,
+	// Date when invite was created
+	pub created_at: DateTime<Utc>,
 }
 
 pub async fn save_user(client: &Client, user: &User) -> Result<(), Error> {
