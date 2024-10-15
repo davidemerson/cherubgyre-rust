@@ -28,29 +28,29 @@ pub struct User {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Invite {
     pub code: String,
-    pub invitor_id: String, 		// ID of the user who created the invite
-    pub invite_count: u32, 			// Number of invitees registered using this invite
-    pub created_at: DateTime<Utc>, 	// Date when invite was created
+    pub invitor_id: String,			// ID of the user who created the invite
+    pub invite_count: u32,			// Number of invitees registered using this invite
+    pub created_at: DateTime<Utc>,	// Date when invite was created
 }
 
 pub async fn save_user(client: &Client, user: &User) -> Result<(), Error> {
     info!("here i am");
     client
-    	.put_item()
+		.put_item()
         .table_name("User")
         .item("id", AttributeValue::S(user.id.clone()))
         .item("invite_code", AttributeValue::S(user.invite_code.clone()))
         .item("normal_pin", AttributeValue::S(user.normal_pin.clone()))
         .item("duress_pin", AttributeValue::S(user.duress_pin.clone()))
         .send()
-        .await?;   
+        .await?;
     Ok(())
 }
 
 pub async fn save_invite(client: &Client, invite: &Invite) -> Result<(), Error> {
     info!("here i am");
     client
-    	.put_item()
+		.put_item()
         .table_name("Invite")
         .item("code", AttributeValue::S(invite.code.clone()))
         .item("invitor_id", AttributeValue::S(invite.invitor_id.clone()))
@@ -79,22 +79,22 @@ pub async fn get_invite(client: &Client, code: &str) -> Result<Option<Invite>, E
     if let Some(item) = result.item {
         let invite = Invite {
             code: item
-            	.get("code")
+				.get("code")
                 .and_then(|v| v.as_s().ok())
                 .map(|s| s.to_string())
                 .unwrap_or_else(String::new),
             invitor_id: item
-            	.get("invitor_id")
+				.get("invitor_id")
                 .and_then(|v| v.as_s().ok())
                 .map(|s| s.to_string())
                 .unwrap_or_else(String::new),
             invite_count: item
-            	.get("invite_count")
+				.get("invite_count")
                 .and_then(|v| v.as_n().ok())
                 .and_then(|n| n.parse::<u32>().ok())
                 .unwrap_or(0),
             created_at: item
-            	.get("created_at")
+				.get("created_at")
                 .and_then(|v| v.as_s().ok())
                 .map(|v| DateTime::parse_from_rfc3339(v).unwrap().with_timezone(&Utc))
                 .unwrap_or(Utc::now()),
@@ -106,29 +106,36 @@ pub async fn get_invite(client: &Client, code: &str) -> Result<Option<Invite>, E
 }
 
 pub async fn get_user_invites(client: &Client, user_id: &str) -> Result<Vec<Invite>, Error> {
-    let result = client.scan()
+    let result = client
+		.scan()
         .table_name("Invite")
         .filter_expression("invitor_id = :id")
         .expression_attribute_values(":id", AttributeValue::S(user_id.to_string()))
         .send()
         .await?;
 
-    let invites = result.items.unwrap_or_default()
+    let invites = result
+		.items
+		.unwrap_or_default()
         .into_iter()
         .map(|item| Invite {
-            code: item.get("code")
+            code: item
+            	.get("code")
                 .and_then(|v| v.as_s().ok())
                 .map(|s| s.to_string())
                 .unwrap_or_else(String::new),
-            invitor_id: item.get("invitor_id")
+            invitor_id: item
+				.get("invitor_id")
                 .and_then(|v| v.as_s().ok())
                 .map(|s| s.to_string())
                 .unwrap_or_else(String::new),
-            invite_count: item.get("invite_count")
+            invite_count: item
+            	.get("invite_count")
                 .and_then(|v| v.as_n().ok())
                 .and_then(|n| n.parse::<u32>().ok())
                 .unwrap_or(0),
-            created_at: item.get("created_at")
+            created_at: item
+            	.get("created_at")
                 .and_then(|v| v.as_s().ok())
                 .map(|v| DateTime::parse_from_rfc3339(v).unwrap().with_timezone(&Utc))
                 .unwrap_or(Utc::now()),
@@ -144,7 +151,7 @@ pub async fn update_invite(client: &Client, invite: &Invite) -> Result<(), Error
         .table_name("Invite")
         .key("code", AttributeValue::S(invite.code.clone()))
         .update_expression(
-        	"SET invitor_id = :invitor_id, invite_count = :invite_count, created_at = :created_at",
+			"SET invitor_id = :invitor_id, invite_count = :invite_count, created_at = :created_at",
         )
         .expression_attribute_values(":invitor_id", AttributeValue::S(invite.invitor_id.clone()))
         .expression_attribute_values(
