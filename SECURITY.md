@@ -9,6 +9,4 @@ If you identify a vulnerability which you believe to be too critical to raise as
 As vulnerabilities are found, we will publish a list of acknowledgements here.
 
 | name | date | commit fix |
-----------------------------
-|      |      |            |
-----------------------------
+|--------------------------|
