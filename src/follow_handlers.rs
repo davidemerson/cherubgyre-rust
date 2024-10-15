@@ -1,8 +1,9 @@
 use actix_web::{web, HttpResponse};
+use aws_sdk_dynamodb::Client;
 use serde::Deserialize;
-use aws_sdk_dynamodb::Client; // Import the DynamoDB client
+// Import the DynamoDB client
 use crate::follow_db;
-use tracing::{info, error};
+use tracing::{error, info};
 
 #[derive(Debug, Deserialize)]
 pub struct FollowRequest {
@@ -67,7 +68,7 @@ pub async fn get_user_follows(
 pub async fn delete_follower(
 	// Access the DynamoDB client from the app state
 	client: web::Data<Client>,
-	path: web::Path<String>, 
+	path: web::Path<String>,
 	req: web::Json<FollowRequest>,
 ) -> HttpResponse {
 	// This is the user who is followed
