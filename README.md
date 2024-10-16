@@ -4,7 +4,10 @@ cherubgyre is an anonymous community defense social network
 https://cherubgyre.com is under construction, but it's got some links.
 https://api.cherubgyre.com has api docs.
 
-## toolchain setup
+## aws deployment instructions
+[placeholder for aws deployment instructions]
+
+## toolchain setup for local development
 1. Install rust, following instructions at https://rustup.rs
 2. Clone this repo
 3. Install RustRover from JetBrains (register for an account, free for non-commercial use)
