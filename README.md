@@ -42,6 +42,7 @@ https://api.cherubgyre.com has api docs.
    cargo install cargo-audit
    cargo audit
    ```
+
 ### notes
 - Check out `.github/workflows/general.yaml` in this repository: it will run some of the above fmt and clippy checks on every push to main.
 - Check out `.github/workflows/audit.yaml` in this repository: it will run audits on every push to main.
