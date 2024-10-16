@@ -3,6 +3,16 @@ name = "cherubgyre"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+path= "src/lib.rs"
+
+[[bin]]
+path = "src/main.rs"
+name = "cherubgyre"
+
+[target.x86_64-unknown-linux-gnu]
+rustflags = ["-C", "linker=clang", "-C", "link-arg=-fuse-ld=lld"]
+
 [dependencies]
 lambda_runtime = "0.13"
 actix-web = "4.0"
