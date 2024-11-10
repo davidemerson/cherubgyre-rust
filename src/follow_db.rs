@@ -1,7 +1,7 @@
 use aws_sdk_dynamodb::{Client, Error};
 use aws_sdk_dynamodb::types::AttributeValue;
 use serde::{Serialize, Deserialize};
-use tracing::{info, error};
+use tracing::info;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

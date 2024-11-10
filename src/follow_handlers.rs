@@ -3,7 +3,7 @@ use aws_sdk_dynamodb::Client;
 use serde::Deserialize;
 // Import the DynamoDB client
 use crate::follow_db;
-use tracing::{error, info};
+use tracing::error;
 
 #[derive(Debug, Deserialize)]
 pub struct FollowRequest {
