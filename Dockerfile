@@ -16,8 +16,7 @@ COPY . .
 RUN cargo build --release
 
 # Create a smaller image with just the compiled binary
-FROM debian:buster-slim
-
+FROM debian:bookworm-slim
 # Install SSL certificates on the runtime image
 RUN apt-get update && \
     apt-get install -y ca-certificates && \
