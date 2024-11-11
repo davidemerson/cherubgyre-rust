@@ -49,7 +49,7 @@ docker push 545009831939.dkr.ecr.us-east-1.amazonaws.com/rust-api:latest
 
 9. Your api is deployed. Check the url in cluster->task-details
 
-`us-east-1:545009831939:task-definition/rust-api-task`
+`https://us-east-1.console.aws.amazon.com/ecs/v2/clusters/RustAPI2/tasks/ac6715e577ff4408839ea2d03f174303/configuration?region=us-east-1&selectedContainer=rust-api-container`
 
 ## toolchain setup for local development
 1. Install rust, following instructions at https://rustup.rs
