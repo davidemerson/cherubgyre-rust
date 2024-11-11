@@ -33,3 +33,5 @@ EXPOSE 8080
 
 # Command to run the API
 CMD ["./cherubgyre"]
+
+
