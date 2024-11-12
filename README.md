@@ -4,52 +4,137 @@ cherubgyre is an anonymous community defense social network
 https://cherubgyre.com is under construction, but it's got some links.
 https://api.cherubgyre.com has api docs.
 
-## aws deployment instructions
-1. First we need to push the code to the repo.
-2. Open Cloudshell and create a repo in ecr
-```
-aws ecr create-repository --repository-name rust-api --region us-east-1
-```
+## deployment instructions
 
-The created repo would return some params, note repoUri from that : `https://545009831939.dkr.ecr.us-east-1.amazonaws.com/rust-api`
+### aws
 
-3. Authenticate docker with aws
+1. Open AWS CloudShell.
 
+2. In CloudShell, create a repository in AWS Elastic Container Registry (ECR).
 ```
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 545009831939.dkr.ecr.us-east-1.amazonaws.com
+aws ecr create-repository --repository-name cherubgyre-dev --region us-east-1
 ```
 
-4. Clone git in CloudShell. and checkout to required branch
+You'll receive a return similar to the following:
+```
+{
+    "repository": {
+        "repositoryArn": "arn:aws:ecr:us-east-1:[youraccount]:repository/cherubgyre-dev",
+        "registryId": "[youraccount]",
+        "repositoryName": "cherubgyre-dev",
+        "repositoryUri": "[youraccount].dkr.ecr.us-east-1.amazonaws.com/cherubgyre-dev",
+        "createdAt": "2024-11-12T00:25:01.243000+00:00",
+        "imageTagMutability": "MUTABLE",
+        "imageScanningConfiguration": {
+            "scanOnPush": false
+        },
+        "encryptionConfiguration": {
+            "encryptionType": "AES256"
+        }
+    }
+}
+```
+In particular, note `repositoryUri:` from the returned parameters.
+
+3. Authenticate Docker with AWS Elastic Container Registry
+```
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin [youraccount].dkr.ecr.us-east-1.amazonaws.com
+```
+
+4. Clone cherubgyre repository to CloudShell
 ```
 git clone https://github.com/davidemerson/cherubgyre
 cd cherubgyre
-git checkout dockerization
 ```
+
 5. Build Docker
 ```
-docker build -t rust-api .
+docker build -t cherubgyre-dev .
 ```   
 
-6. Tag the Docker image for ECR:
+6. Tag the Docker image for AWS Elastic Container Registry:
 ```
-docker tag rust-api:latest 545009831939.dkr.ecr.us-east-1.amazonaws.com/rust-api:latest
-```
-7. Push the image to ECR:
-```
-docker push 545009831939.dkr.ecr.us-east-1.amazonaws.com/rust-api:latest
+docker tag cherubgyre-dev:latest [youraccount].dkr.ecr.us-east-1.amazonaws.com/cherubgyre-dev:latest
 ```
 
-6. Create an ecs cluster with AWS Fragate option.
-7. Create a task definition with cluster uri got in previous step. Port 8080 should be adding in port openings
+7. Push the image to AWS Elastic Container Registry:
+```
+docker push [youraccount].dkr.ecr.us-east-1.amazonaws.com/cherubgyre-dev:latest
+```
 
-![Task Configuration](image.png)
-8. Run the Task & Test API. You should add security group to allow inbound traffic. I've added a security group for that
+6. You will now go to the AWS Elastic Container Service (ECS) console and create a cluster for your deployment. We'll use Fargate to keep things serverless.
+- Open the console at https://console.aws.amazon.com/ecs/v2
+- From the navigation bar, upper right, make sure your region is appropriate.
+- In the navigation pane, left, choose `Clusters`.
+- Under `Cluster configuration` set the cluster name. For us, this was:
+```
+Cluster name = cherubgyre-dev
+```
+- Leave `AWS Fargate (serverless)` checked.
+- Click `Create`
 
-![Task execution step](image-1.png)
+7. Create a task definition. Modify this JSON with your account values as appropriate to `Create new task definition with JSON`:
+```
+{
+    "containerDefinitions": [
+        {
+            "name": "cherubgyre-dev",
+            "image": "[youraccount].dkr.ecr.us-east-1.amazonaws.com/cherubgyre-dev:latest",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "name": "rust-api-container-8080-tcp",
+                    "containerPort": 8080,
+                    "hostPort": 8080,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "environment": [],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "ulimits": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/cherubgyre-dev",
+                    "mode": "non-blocking",
+                    "awslogs-create-group": "true",
+                    "max-buffer-size": "25m",
+                    "awslogs-region": "us-east-1",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            },
+            "systemControls": []
+        }
+    ],
+    "family": "cherubgyre-dev",
+    "executionRoleArn": "arn:aws:iam::[youraccount]:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "volumes": [],
+    "placementConstraints": [],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "512",
+    "memory": "1024",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "tags": []
+}
+```
 
-9. Your api is deployed. Check the url in cluster->task-details
+(to do) >> steps 8 & 9 (create task and create service) need to be converted to aws-cli / cloudshell steps so they don't rely on UI options as much
 
-`https://us-east-1.console.aws.amazon.com/ecs/v2/clusters/RustAPI2/tasks/ac6715e577ff4408839ea2d03f174303/configuration?region=us-east-1&selectedContainer=rust-api-container`
+(to do) >> use an elastic IP address we can reuse for -dev and for production (one for each). I will add them to DNS once they're available
+
+(to do) >> add a step which demonstrates a test against the /v1/health endpoint so the user can validate that their server is healthy
+
 
 ## toolchain setup for local development
 1. Install rust, following instructions at https://rustup.rs
