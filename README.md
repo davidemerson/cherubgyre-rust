@@ -129,11 +129,70 @@ Cluster name = cherubgyre-dev
 }
 ```
 
-(to do) >> steps 8 & 9 (create task and create service) need to be converted to aws-cli / cloudshell steps so they don't rely on UI options as much
+(to do) >> steps 8 & 9 (create task and create service) need to be converted to aws-cli / cloudshell steps so they don't rely on UI options as much (see below, it can all be one script really)
 
-(to do) >> use an elastic IP address we can reuse for -dev and for production (one for each). I will add them to DNS once they're available
+(to do) >> add a step which demonstrates a test against the /v1/health endpoint so the user can validate that their server is healthy. You can use Postman for this, or even just curl/wget
 
-(to do) >> add a step which demonstrates a test against the /v1/health endpoint so the user can validate that their server is healthy
+(to do) >> organize this all in a single cloudshell script for provisioning, something like this (not complete, just an example):
+
+```
+#!/bin/bash
+
+# Variables
+VPC_ID=$(aws ec2 describe-vpcs --query "Vpcs[0].VpcId" --output text)
+SUBNET_IDS=$(aws ec2 describe-subnets --filters Name=vpc-id,Values=$VPC_ID --query "Subnets[*].SubnetId" --output text | tr '\t' ',')
+
+SERVICE_NAME="service-cherubgyre"
+CLUSTER_NAME="cluster-cherubgyre"
+TASK_DEFINITION="cg-task" # Replace with your task definition name and revision
+
+# Create Elastic IP
+EIP_ALLOC_ID=$(aws ec2 allocate-address --query "AllocationId" --output text)
+
+# Create Target Group for Fargate service
+TARGET_GROUP_ARN=$(aws elbv2 create-target-group \
+    --name fargate-target-group \
+    --protocol HTTP \
+    --port 8080 \
+    --vpc-id $VPC_ID \
+    --target-type ip \
+    --query "TargetGroups[0].TargetGroupArn" \
+    --output text)
+
+# Create Load Balancer
+LOAD_BALANCER_ARN=$(aws elbv2 create-load-balancer \
+    --name fargate-lb \
+    --subnets $SUBNET_IDS \
+    --security-groups $(aws ec2 describe-security-groups --filters Name=vpc-id,Values=$VPC_ID --query "SecurityGroups[0].GroupId" --output text) \
+    --query "LoadBalancers[0].LoadBalancerArn" \
+    --output text)
+
+# Create Listener for Load Balancer
+aws elbv2 create-listener \
+    --load-balancer-arn $LOAD_BALANCER_ARN \
+    --protocol HTTP \
+    --port 8080 \
+    --default-actions Type=forward,TargetGroupArn=$TARGET_GROUP_ARN
+
+# Create ECS Cluster (if not already created)
+aws ecs create-cluster --cluster-name $CLUSTER_NAME
+
+# Create Fargate Service and Associate with Load Balancer
+aws ecs create-service \
+    --cluster $CLUSTER_NAME \
+    --service-name $SERVICE_NAME \
+    --task-definition $TASK_DEFINITION \
+    --load-balancers targetGroupArn=$TARGET_GROUP_ARN,containerName=your-container-name,containerPort=80 \
+    --desired-count 1 \
+    --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_IDS],securityGroups=[$(aws ec2 describe-security-groups --filters Name=vpc-id,Values=$VPC_ID --query "SecurityGroups[0].GroupId" --output text)],assignPublicIp=ENABLED}" \
+    --launch-type FARGATE
+
+# Associate Elastic IP to the Load Balancer
+NETWORK_INTERFACE_ID=$(aws elbv2 describe-load-balancers --load-balancer-arns $LOAD_BALANCER_ARN --query "LoadBalancers[0].NetworkInterfaces[0].NetworkInterfaceId" --output text)
+aws ec2 associate-address --allocation-id $EIP_ALLOC_ID --network-interface-id $NETWORK_INTERFACE_ID
+
+echo "Elastic Load Balancer with Elastic IP is now available for the Fargate service."
+```
 
 
 ## toolchain setup for local development
