@@ -43,13 +43,30 @@ docker push 545009831939.dkr.ecr.us-east-1.amazonaws.com/rust-api:latest
 7. Create a task definition with cluster uri got in previous step. Port 8080 should be adding in port openings
 
 ![Task Configuration](image.png)
-8. Run the Task & Test API. You should add security group to allow inbound traffic. I've added a security group for that
+8. Run the Task & Test API.
+Once the task definition is registered, you can run the task in your ECS cluster using the following command. Replace the placeholders accordingly
 
-![Task execution step](image-1.png)
+```
+aws ecs run-task \
+    --cluster rust-api \
+    --launch-type FARGATE \
+    --task-definition RustAPI \
+    --network-configuration 'awsvpcConfiguration={
+        subnets=["subnet-0ac341ecb24bee027", "subnet-0c0d9667c504aa776", "subnet-002bf7f9fbe43da9a", "subnet-06f2c8c9315a207f8", "subnet-0101c89782bed53be", "subnet-0f52ad3011c093e0c"],
+        securityGroups=["sg-0001d3ac435b86000"],
+        assignPublicIp="ENABLED"
+    }'
+
+```
+
 
 9. Your api is deployed. Check the url in cluster->task-details
+```
+aws ecs list-tasks \
+    --cluster rust-api \
+    --desired-status RUNNING
 
-`https://us-east-1.console.aws.amazon.com/ecs/v2/clusters/RustAPI2/tasks/ac6715e577ff4408839ea2d03f174303/configuration?region=us-east-1&selectedContainer=rust-api-container`
+```
 
 ## toolchain setup for local development
 1. Install rust, following instructions at https://rustup.rs
