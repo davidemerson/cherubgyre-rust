@@ -62,7 +62,7 @@ docker tag cherubgyre-dev:latest [youraccount].dkr.ecr.us-east-1.amazonaws.com/c
 docker push [youraccount].dkr.ecr.us-east-1.amazonaws.com/cherubgyre-dev:latest
 ```
 
-6. You will now go to the AWS Elastic Container Service (ECS) console and create a cluster for your deployment. We'll use Fargate to keep things serverless.
+8. You will now go to the AWS Elastic Container Service (ECS) console and create a cluster for your deployment. We'll use Fargate to keep things serverless.
 - Open the console at https://console.aws.amazon.com/ecs/v2
 - From the navigation bar, upper right, make sure your region is appropriate.
 - In the navigation pane, left, choose `Clusters`.
@@ -129,69 +129,147 @@ Cluster name = cherubgyre-dev
 }
 ```
 
-(to do) >> steps 8 & 9 (create task and create service) need to be converted to aws-cli / cloudshell steps so they don't rely on UI options as much (see below, it can all be one script really)
+9. Run the Task & Test API.
+Once the task definition is registered, you can run the task in your ECS cluster using the following command. Replace the placeholders accordingly
 
-(to do) >> add a step which demonstrates a test against the /v1/health endpoint so the user can validate that their server is healthy. You can use Postman for this, or even just curl/wget
+```
+aws ecs run-task \
+    --cluster rust-api \
+    --launch-type FARGATE \
+    --task-definition RustAPI \
+    --network-configuration 'awsvpcConfiguration={
+        subnets=["subnet-0ac341ecb24bee027", "subnet-0c0d9667c504aa776", "subnet-002bf7f9fbe43da9a", "subnet-06f2c8c9315a207f8", "subnet-0101c89782bed53be", "subnet-0f52ad3011c093e0c"],
+        securityGroups=["sg-0001d3ac435b86000"],
+        assignPublicIp="ENABLED"
+    }'
 
-(to do) >> organize this all in a single cloudshell script for provisioning, something like this (not complete, just an example):
+```
 
+
+10. Your api is deployed. Check the url in cluster->task-details
+```
+aws ecs list-tasks \
+    --cluster rust-api \
+    --desired-status RUNNING
+
+```
+
+## Single bash script
 ```
 #!/bin/bash
 
 # Variables
-VPC_ID=$(aws ec2 describe-vpcs --query "Vpcs[0].VpcId" --output text)
-SUBNET_IDS=$(aws ec2 describe-subnets --filters Name=vpc-id,Values=$VPC_ID --query "Subnets[*].SubnetId" --output text | tr '\t' ',')
+AWS_REGION="us-east-1"
+REPOSITORY_NAME="cherubgyre-dev"
+IMAGE_TAG="latest"
+CLUSTER_NAME="cherubgyre-dev"
+TASK_DEFINITION_FAMILY="cherubgyre-dev"
+SUBNETS='["subnet-0ac341ecb24bee027", "subnet-0c0d9667c504aa776", "subnet-002bf7f9fbe43da9a", "subnet-06f2c8c9315a207f8", "subnet-0101c89782bed53be", "subnet-0f52ad3011c093e0c"]'
+SECURITY_GROUP="sg-0001d3ac435b86000"
 
-SERVICE_NAME="service-cherubgyre"
-CLUSTER_NAME="cluster-cherubgyre"
-TASK_DEFINITION="cg-task" # Replace with your task definition name and revision
+# Create ECR Repository
+echo "Creating ECR repository..."
+REPOSITORY_URI=$(aws ecr create-repository --repository-name $REPOSITORY_NAME --region $AWS_REGION \
+    --query 'repository.repositoryUri' --output text)
 
-# Create Elastic IP
-EIP_ALLOC_ID=$(aws ec2 allocate-address --query "AllocationId" --output text)
+echo "Repository URI: $REPOSITORY_URI"
 
-# Create Target Group for Fargate service
-TARGET_GROUP_ARN=$(aws elbv2 create-target-group \
-    --name fargate-target-group \
-    --protocol HTTP \
-    --port 8080 \
-    --vpc-id $VPC_ID \
-    --target-type ip \
-    --query "TargetGroups[0].TargetGroupArn" \
-    --output text)
+# Authenticate Docker with ECR
+echo "Authenticating Docker with ECR..."
+aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
 
-# Create Load Balancer
-LOAD_BALANCER_ARN=$(aws elbv2 create-load-balancer \
-    --name fargate-lb \
-    --subnets $SUBNET_IDS \
-    --security-groups $(aws ec2 describe-security-groups --filters Name=vpc-id,Values=$VPC_ID --query "SecurityGroups[0].GroupId" --output text) \
-    --query "LoadBalancers[0].LoadBalancerArn" \
-    --output text)
+# Clone the repository
+echo "Cloning the repository..."
+git clone https://github.com/davidemerson/cherubgyre
+cd cherubgyre || exit
 
-# Create Listener for Load Balancer
-aws elbv2 create-listener \
-    --load-balancer-arn $LOAD_BALANCER_ARN \
-    --protocol HTTP \
-    --port 8080 \
-    --default-actions Type=forward,TargetGroupArn=$TARGET_GROUP_ARN
+# Build Docker Image
+echo "Building Docker image..."
+docker build -t $REPOSITORY_NAME .
 
-# Create ECS Cluster (if not already created)
-aws ecs create-cluster --cluster-name $CLUSTER_NAME
+# Tag Docker Image
+echo "Tagging Docker image..."
+docker tag $REPOSITORY_NAME:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
 
-# Create Fargate Service and Associate with Load Balancer
-aws ecs create-service \
+# Push Docker Image to ECR
+echo "Pushing Docker image to ECR..."
+docker push $REPOSITORY_URI:$IMAGE_TAG
+
+# Go back to initial directory
+cd ..
+
+# Create ECS Cluster
+echo "Creating ECS cluster..."
+aws ecs create-cluster --cluster-name $CLUSTER_NAME --region $AWS_REGION
+
+# Register Task Definition
+echo "Registering ECS Task Definition..."
+cat <<EOF > task-definition.json
+{
+    "containerDefinitions": [
+        {
+            "name": "$REPOSITORY_NAME",
+            "image": "$REPOSITORY_URI:$IMAGE_TAG",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "name": "rust-api-container-8080-tcp",
+                    "containerPort": 8080,
+                    "hostPort": 8080,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/$CLUSTER_NAME",
+                    "awslogs-region": "$AWS_REGION",
+                    "awslogs-create-group": "true",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ],
+    "family": "$TASK_DEFINITION_FAMILY",
+    "executionRoleArn": "arn:aws:iam::[youraccount]:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "512",
+    "memory": "1024",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    }
+}
+EOF
+
+aws ecs register-task-definition --cli-input-json file://task-definition.json
+
+# Run Task
+echo "Running ECS Task..."
+TASK_ARN=$(aws ecs run-task \
     --cluster $CLUSTER_NAME \
-    --service-name $SERVICE_NAME \
-    --task-definition $TASK_DEFINITION \
-    --load-balancers targetGroupArn=$TARGET_GROUP_ARN,containerName=your-container-name,containerPort=80 \
-    --desired-count 1 \
-    --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_IDS],securityGroups=[$(aws ec2 describe-security-groups --filters Name=vpc-id,Values=$VPC_ID --query "SecurityGroups[0].GroupId" --output text)],assignPublicIp=ENABLED}" \
-    --launch-type FARGATE
+    --launch-type FARGATE \
+    --task-definition $TASK_DEFINITION_FAMILY \
+    --network-configuration "awsvpcConfiguration={subnets=$SUBNETS,securityGroups=[$SECURITY_GROUP],assignPublicIp='ENABLED'}" \
+    --query 'tasks[0].taskArn' --output text)
 
-# Associate Elastic IP to the Load Balancer
-NETWORK_INTERFACE_ID=$(aws elbv2 describe-load-balancers --load-balancer-arns $LOAD_BALANCER_ARN --query "LoadBalancers[0].NetworkInterfaces[0].NetworkInterfaceId" --output text)
-aws ec2 associate-address --allocation-id $EIP_ALLOC_ID --network-interface-id $NETWORK_INTERFACE_ID
+echo "Task ARN: $TASK_ARN"
 
-echo "Elastic Load Balancer with Elastic IP is now available for the Fargate service."
+# Wait for Task to Start
+echo "Waiting for task to start..."
+aws ecs wait tasks-running --cluster $CLUSTER_NAME --tasks $TASK_ARN
+
+# Get Task Details
+TASK_DETAILS=$(aws ecs describe-tasks --cluster $CLUSTER_NAME --tasks $TASK_ARN --query 'tasks[0].attachments[0].details')
+PUBLIC_IP=$(echo $TASK_DETAILS | jq -r '.[] | select(.name=="networkInterfaceId") | .value' | xargs -I{} aws ec2 describe-network-interfaces --network-interface-ids {} --query 'NetworkInterfaces[0].Association.PublicIp' --output text)
+
+echo "API is now running at http://$PUBLIC_IP:8080"
+
 ```
 
 
