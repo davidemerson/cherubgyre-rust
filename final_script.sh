@@ -44,8 +44,8 @@ deploy() {
 
   # Clone the repository
   echo "Cloning the repository..."
-  git clone https://github.com/davidemerson/$REPOSITORY_NAME
-  cd $REPOSITORY_NAME || exit
+  git clone https://github.com/davidemerson/cherubgyre
+  cd cherubgyre
 
   # Build Docker Image
   echo "Building Docker image..."
