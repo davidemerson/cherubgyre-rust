@@ -5,7 +5,7 @@ AWS_REGION="us-east-1"
 IMAGE_TAG="latest"
 CLUSTER_NAME="cherubgyre-dev"
 TASK_DEFINITION_FAMILY="cherubgyre-dev"
-SUBNETS='["subnet-0ac341ecb24bee027", "subnet-0c0d9667c504aa776", "subnet-002bf7f9fbe43da9a", "subnet-06f2c8c9315a207f8", "subnet-0101c89782bed53be", "subnet-0f52ad3011c093e0c"]'
+SUBNETS='["subnet-0f52ad3011c093e0c"]'
 SECURITY_GROUP="sg-0001d3ac435b86000"
 
 # Parse command-line arguments
