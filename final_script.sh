@@ -9,11 +9,11 @@ SUBNETS='["subnet-0f52ad3011c093e0c"]'
 SECURITY_GROUP="sg-0001d3ac435b86000"
 
 # Parse command-line arguments
-while getopts "d:ud:" opt; do
+while getopts "d:u:" opt; do
   case "$opt" in
     d) ACTION="deploy"; REPOSITORY_NAME="$OPTARG";;
-    ud) ACTION="undeploy"; REPOSITORY_NAME="$OPTARG";;
-    *) echo "Usage: $0 -d <repository_name> or -ud <repository_name>"; exit 1;;
+    u) ACTION="undeploy"; REPOSITORY_NAME="$OPTARG";;
+    *) echo "Usage: $0 -d <repository_name> or -u <repository_name>"; exit 1;;
   esac
 done
 
