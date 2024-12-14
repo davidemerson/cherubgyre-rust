@@ -140,23 +140,27 @@ undeploy() {
   TASK_ARN=$(aws ecs list-tasks --cluster $CLUSTER_NAME --query 'taskArns[0]' --output text)
 
   if [ "$TASK_ARN" != "None" ]; then
-    aws ecs update-service --cluster $CLUSTER_NAME --service $REPOSITORY_NAME --desired-count 0
-    aws ecs wait services-stable --cluster $CLUSTER_NAME --services $REPOSITORY_NAME
-    aws ecs delete-service --cluster $CLUSTER_NAME --service $REPOSITORY_NAME
-    echo "Service stopped and deleted."
+    aws ecs stop-task --cluster $CLUSTER_NAME --task $TASK_ARN
+    echo "Task stopped."
   else
     echo "No active task found to stop."
   fi
 
   echo "Deregistering ECS Task Definition..."
-  aws ecs deregister-task-definition --task-definition $TASK_DEFINITION_FAMILY
+  # Retrieve the task definition with the revision number
+  TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition $TASK_DEFINITION_FAMILY --query 'taskDefinition.taskDefinitionArn' --output text)
+
+  if [ "$TASK_DEFINITION" != "None" ]; then
+    aws ecs deregister-task-definition --task-definition $TASK_DEFINITION
+    echo "Task definition deregistered."
+  else
+    echo "No task definition found to deregister."
+  fi
 
   echo "Deleting ECS Cluster..."
   aws ecs delete-cluster --cluster $CLUSTER_NAME --region $AWS_REGION
-
   echo "Undeployment completed."
 }
-
 # Execute based on action
 if [ "$ACTION" == "deploy" ]; then
   deploy
