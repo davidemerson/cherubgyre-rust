@@ -97,7 +97,7 @@ deploy() {
       }
     ],
     "family": "$TASK_DEFINITION_FAMILY",
-    "executionRoleArn": "arn:aws:iam::[youraccount]:role/ecsTaskExecutionRole",
+    "executionRoleArn": "arn:aws:iam::545009831939:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
     "requiresCompatibilities": [
       "FARGATE"
