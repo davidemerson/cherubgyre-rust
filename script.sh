@@ -9,10 +9,17 @@ TASK_DEFINITION_FAMILY="cherubgyre-dev"
 SUBNETS='["subnet-0ac341ecb24bee027", "subnet-0c0d9667c504aa776", "subnet-002bf7f9fbe43da9a", "subnet-06f2c8c9315a207f8", "subnet-0101c89782bed53be", "subnet-0f52ad3011c093e0c"]'
 SECURITY_GROUP="sg-0001d3ac435b86000"
 
-# Create ECR Repository
-echo "Creating ECR repository..."
-REPOSITORY_URI=$(aws ecr create-repository --repository-name $REPOSITORY_NAME --region $AWS_REGION \
-    --query 'repository.repositoryUri' --output text)
+echo "Checking if repository exists..."
+EXISTING_REPO=$(aws ecr describe-repositories --repository-names $REPOSITORY_NAME --region $AWS_REGION --query 'repositories[0].repositoryUri' --output text)
+
+if [ "$EXISTING_REPO" == "None" ]; then
+    echo "Repository does not exist. Creating repository..."
+    REPOSITORY_URI=$(aws ecr create-repository --repository-name $REPOSITORY_NAME --region $AWS_REGION --query 'repository.repositoryUri' --output text)
+else
+    echo "Repository already exists: $EXISTING_REPO"
+    REPOSITORY_URI=$EXISTING_REPO
+fi
+
 
 echo "Repository URI: $REPOSITORY_URI"
 
