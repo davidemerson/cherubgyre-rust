@@ -1,5 +1,5 @@
 # Use a newer Rust image (1.78.0 or later)
-FROM rust:1.78 AS builder
+FROM rust:1.84 AS builder
 
 # Install git and SSL certificates
 RUN apt-get update && \
