@@ -10,7 +10,7 @@ path = "src/lib.rs"
 name = "cherubgyre"
 path = "src/main.rs"
 
-[target.x86_64-unknown-linux-gnu]
+[build]
 rustflags = ["-C", "linker=clang", "-C", "link-arg=-fuse-ld=lld"]
 
 [dependencies]
