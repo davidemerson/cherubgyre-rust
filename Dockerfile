@@ -10,9 +10,6 @@ WORKDIR /usr/src/app
 # Copy Cargo files first to leverage caching for dependencies
 COPY Cargo.toml Cargo.lock ./
 
-# Update Cargo.lock to ensure it matches Cargo.toml
-RUN cargo update
-
 # Fetch dependencies (cached unless dependencies change)
 RUN cargo fetch
 
