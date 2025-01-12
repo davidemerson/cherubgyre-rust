@@ -8,7 +8,10 @@ https://api.cherubgyre.com has api docs.
 
 ### aws deployment
 
-1. Open AWS CloudShell.
+1. Open AWS CloudShell. Sometimes it's worth issuing a command to clear the docker build cache in CloudShell before you begin, since the storage they give you is minimal:
+```
+docker system prune -a -f
+```
 
 2. In CloudShell upload `deploy-script.sh` from this repo using the `Actions > Upload File` in the upper-right corner of the screen.
 
