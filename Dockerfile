@@ -1,9 +1,8 @@
 # Build stage
-FROM rust:1.84-slim AS builder
+FROM rust:1.84-alpine AS builder
 
-# Install necessary tools
-RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+# Install necessary tools using apk (Alpine package manager)
+RUN apk add --no-cache git ca-certificates
 
 # Set the working directory
 WORKDIR /usr/src/app
@@ -23,7 +22,7 @@ RUN cargo build --release
 # Runtime stage
 FROM alpine:latest
 
-# Install SSL certificates on the runtime image
+# Install SSL certificates using apk
 RUN apk add --no-cache ca-certificates
 
 # Set the working directory
