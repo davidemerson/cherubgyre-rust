@@ -1,0 +1,41 @@
+# Ignore the target directory (build artifacts)
+target/
+
+# Ignore git-related files
+.git/
+.gitignore
+
+# Ignore temporary files and directories
+*.tmp
+*.log
+*.swp
+*.bak
+*.old
+*.DS_Store
+*.idea/
+*.vscode/
+
+# Ignore environment and configuration files
+.env
+*.env.*
+
+# Ignore dependency manager files (if applicable)
+node_modules/
+yarn.lock
+package-lock.json
+
+# Ignore files created by editors or IDEs
+**/__pycache__/
+*.pyc
+*.pyo
+*.class
+
+# Ignore other unneeded files
+coverage/
+*.profdata
+*.profraw
+
+# Ensure your Cargo files and source code are included
+!Cargo.toml
+!Cargo.lock
+!src/
