@@ -25,6 +25,9 @@ FROM alpine:latest
 # Install SSL certificates using apk
 RUN apk add --no-cache ca-certificates
 
+# Install musl-dev for building musl-based Rust projects
+RUN apk add --no-cache musl-dev gcc
+
 # Set the working directory
 WORKDIR /usr/src/app
 
