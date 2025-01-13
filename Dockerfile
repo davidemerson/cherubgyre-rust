@@ -1,41 +1,41 @@
-# Build stage
+# Build Stage
 FROM rust:1.84-alpine AS builder
 
-# Install necessary tools using apk (Alpine package manager)
-RUN apk add --no-cache git ca-certificates
+# Install necessary tools
+RUN apk add --no-cache git ca-certificates musl-dev gcc libc-dev
 
 # Set the working directory
 WORKDIR /usr/src/app
 
-# Copy Cargo files first to leverage caching for dependencies
+# Copy Cargo files first for dependency caching
 COPY Cargo.toml Cargo.lock ./
 
-# Fetch dependencies (cached unless dependencies change)
+# Fetch dependencies (cached unless Cargo files change)
 RUN cargo fetch
 
 # Copy the source code
 COPY . .
 
-# Build the application in release mode
-RUN cargo build --release
+# Build the application in release mode for musl
+RUN cargo build --release --target x86_64-unknown-linux-musl
 
-# Runtime stage
+# Runtime Stage
 FROM alpine:latest
 
-# Install SSL certificates using apk
+# Install CA certificates for HTTPS support
 RUN apk add --no-cache ca-certificates
 
-# Install musl-dev for building musl-based Rust projects
-RUN apk add --no-cache musl-dev gcc
-
 # Set the working directory
-WORKDIR /usr/src/app
+WORKDIR /usr/local/bin
 
-# Copy the compiled binary from the build stage
-COPY --from=builder /usr/src/app/target/release/cherubgyre .
+# Copy the compiled binary from the builder stage
+COPY --from=builder /usr/src/app/target/x86_64-unknown-linux-musl/release/cherubgyre .
 
-# Expose the API port
+# Ensure the binary is executable
+RUN chmod +x ./cherubgyre
+
+# Expose the application port
 EXPOSE 8080
 
-# Command to run the API
+# Define the command to run the application
 CMD ["./cherubgyre"]
