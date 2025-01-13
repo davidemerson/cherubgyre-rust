@@ -1,2 +1,10 @@
 target/
 node_modules
+*.tmp
+*.log
+*.swp
+*.bak
+*.old
+*.DS_Store
+*.idea/
+*.vscode/

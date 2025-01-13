@@ -3,6 +3,7 @@ target/
 
 # Ignore git-related files
 .git/
+.github/
 .gitignore
 
 # Ignore temporary files and directories
@@ -39,3 +40,4 @@ coverage/
 !Cargo.toml
 !Cargo.lock
 !src/
+!tests/

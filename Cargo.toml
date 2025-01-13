@@ -40,5 +40,5 @@ incremental = true
 [profile.release]
 # Thin LTO for faster linking in release builds
 lto = "thin"
-codegen-units = 1 # Optimize for size and performance
-opt-level = "z" # Reduce binary size
+codegen-units = 256 # lower to 1 when in production, this is a dev value for fast compile times
+opt-level = "s" # binary size isn't critical, so we optimize for speed

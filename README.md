@@ -39,7 +39,7 @@ chmod 755 deploy-script.sh
 
 4. To undeploy environment `cherubgyre-prod` and remove all AWS components related to that environment, execute the script with the following options:
 ```
-sh deploy-script.sh -ud cherubgyre-prod
+sh deploy-script.sh -u cherubgyre-prod
 ```
 
 5. When the script is done, it will confirm that all components of the ennvironment have been deprovisioned.
