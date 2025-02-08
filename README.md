@@ -1,3 +1,7 @@
+# ---ARCHIVED---
+
+[check out the updated golang project here, it's current](https://github.com/davidemerson/cherubgyre)
+
 # cherubgyre
 cherubgyre is an anonymous community defense social network
 
